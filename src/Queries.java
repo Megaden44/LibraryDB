@@ -56,9 +56,10 @@ import java.util.*;
  * 
  * @author Leon J. Madrid (madrid.1), Jeff Hachtel (hachtel.5)
  * 
+ * Class modified by Paige Moden, Paige Bormann, Derek Nelson, and Luke Wilcox
  */
 
-public class CSE3241LabExamples {
+public class Queries {
     
 	/**
 	 *  The database file name.
@@ -68,6 +69,9 @@ public class CSE3241LabExamples {
 	 *  Otherwise, you will need to provide an absolute path from your C: drive or a relative path from the folder this class is in.
 	 */
 	private static String DATABASE = "librarydb.db";
+	static Connection conn;
+	static Scanner in;
+
 	
 	/**
 	 *  The query statement to be executed.
@@ -76,28 +80,33 @@ public class CSE3241LabExamples {
 	 *  (Not all programming languages and/or packages require the semicolon (e.g., Python's SQLite3 library))
 	 */
 	private static String allMedia = "SELECT * FROM Media;";
-	private static String tracksOfArtistBeforeYear = "SELECT T.Track_Title\r\n"
-													+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
-													+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
-													+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ? AND M.Year < ?;";
-	private static String insertArtist = "INSERT INTO Artist\r\n"
-										+ "VALUES (?);";
+	private static String tracksByArtistBeforeYearSQL = "SELECT T.Track_Title\r\n"
+														+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
+														+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
+														+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ? AND M.Year < ?;";
+	private static String insertArtistSQL = "INSERT INTO Artist\r\n"
+											+ "VALUES (?);";
+	private static String albumsCheckedOutByPatronSQL = "SELECT COUNT(M.Media_id) as Albums_Checked_Out\r\n"
+														+ "FROM Album AS A, Media AS M, Inventory_Media AS IM, Member_Checked_Out AS MC\r\n"
+														+ "WHERE A.Media_id = M.Media_id AND M.Media_id = IM.Media_id AND\r\n"
+														+ "IM.Instance_id = MC.Instance_id AND MC.Member_id = ?;";
 	
     /**
-     * Connects to the database if it exists, creates it if it does not, and returns the connection object.
+     * Connects to the database if it exists, creates it if it does not, and saves the connection object
      * 
      * @param databaseFileName the database file name
      * @return a connection object to the designated database
      */
-    public static Connection initializeDB(String databaseFileName) {
+    static void initializeDB(Scanner in) {
     	/**
     	 * The "Connection String" or "Connection URL".
     	 * 
     	 * "jdbc:sqlite:" is the "subprotocol".
     	 * (If this were a SQL Server database it would be "jdbc:sqlserver:".)
     	 */
-        String url = "jdbc:sqlite:" + databaseFileName;
-        Connection conn = null; // If you create this variable inside the Try block it will be out of scope
+    	Queries.in = in;
+        String url = "jdbc:sqlite:" + DATABASE;
+        conn = null; // If you create this variable inside the Try block it will be out of scope
         try {
             conn = DriverManager.getConnection(url);
             if (conn != null) {
@@ -113,7 +122,7 @@ public class CSE3241LabExamples {
             System.out.println(e.getMessage());
             System.out.println("There was a problem connecting to the database.");
         }
-        return conn;
+        
     }
     
     /**
@@ -124,35 +133,22 @@ public class CSE3241LabExamples {
      * This query is written with the Statement class, tipically 
      * used for static SQL SELECT statements
      */
-    public static void sqlQuery(Connection conn, String sql){
+    static void sqlQuery(String sql){
         try {
         	Statement stmt = conn.createStatement();
         	ResultSet rs = stmt.executeQuery(sql);
-        	ResultSetMetaData rsmd = rs.getMetaData();
-        	int columnCount = rsmd.getColumnCount();
-        	for (int i = 1; i <= columnCount; i++) {
-        		String value = rsmd.getColumnName(i);
-        		System.out.print(value);
-        		if (i < columnCount) System.out.print(",  ");
-        	}
-			System.out.print("\n");
-        	while (rs.next()) {
-        		for (int i = 1; i <= columnCount; i++) {
-        			String columnValue = rs.getString(i);
-            		System.out.print(columnValue);
-            		if (i < columnCount) System.out.print(",  ");
-        		}
-    			System.out.print("\n");
-        	}
+        	printResultSet(rs);
+
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
     }
     
-    public static void sqlPreparedQuery(Connection conn, String sql, Map<Integer, String> strings, Map<Integer, Integer> integers){
+    static void sqlPreparedQuery(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers){
         try {
         	PreparedStatement stmt = null;
         	ResultSet resultSet = null;
+        	int size =0;
     		stmt = conn.prepareStatement(sql);
 
         	//add in params
@@ -165,15 +161,31 @@ public class CSE3241LabExamples {
         	}
         	
         	ResultSet rs = stmt.executeQuery();
-        	ResultSetMetaData rsmd = rs.getMetaData();
-        	int columnCount = rsmd.getColumnCount();
-        	for (int i = 1; i <= columnCount; i++) {
-        		String value = rsmd.getColumnName(i);
-        		System.out.print(value);
-        		if (i < columnCount) System.out.print(",  ");
-        	}
-			System.out.print("\n");
+        	printResultSet(rs);
+        	
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+    }
+    
+    private static void printResultSet(ResultSet rs) {
+    	int columnCount = 0;
+    	try {
+    		boolean firstVisited = false;
+			
         	while (rs.next()) {
+        		if (!firstVisited) {
+        			ResultSetMetaData rsmd = rs.getMetaData();
+                	columnCount = rsmd.getColumnCount();
+                	for (int i = 1; i <= columnCount; i++) {
+                		String value = rsmd.getColumnName(i);
+                		System.out.print(value);
+                		if (i < columnCount) System.out.print(",  ");
+                	}
+        			System.out.print("\n");
+        			
+        			firstVisited = true;
+        		}
         		for (int i = 1; i <= columnCount; i++) {
         			String columnValue = rs.getString(i);
             		System.out.print(columnValue);
@@ -181,12 +193,18 @@ public class CSE3241LabExamples {
         		}
     			System.out.print("\n");
         	}
-        } catch (SQLException e) {
-            System.out.println(e.getMessage());
-        }
+        	
+        	if (!firstVisited) {
+        		System.out.println("Query returned no results.");
+        	}
+	    	
+    	} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
-    public static void sqlPreparedInsert(Connection conn, String sql, Map<Integer, String> strings, Map<Integer, Integer> integers){
+    static void sqlPreparedInsert(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers){
         try {
         	PreparedStatement stmt = null;
         	ResultSet resultSet = null;
@@ -210,76 +228,106 @@ public class CSE3241LabExamples {
             System.out.println(e.getMessage());
         }
     }
-
     
-    public static void main(String[] args) {
-    	Scanner keyboard = new Scanner(System.in);
-    	System.out.println("This is a new run");
-    	Connection conn = initializeDB(DATABASE);
-    	    	
-    	System.out.println("*********************************************************************");
-    	System.out.println("Part 5 - Add another query");
-    	System.out.println("*********************************************************************");
-    	System.out.println("Part 6 - Add other queries - Use PreparedStatements");
-    	
-    	System.out.println("Choose your desired query:");
-    	System.out.println("(1) Return all media entries.");
-    	System.out.println("(2) Return tracks by an artist before a specific year.");
-    	System.out.println("(3) Insert an artist into the database.");
-    	
-    	int selection = keyboard.nextInt();
-    	keyboard.nextLine();
-    	
-    	if (selection == 1) {
-        	sqlQuery(conn, allMedia);
-    	} else if (selection == 2) {
-        	Map<Integer, String> strings = new HashMap<>();
-        	Map<Integer, Integer> integers = new HashMap<>();
+    static void tracksByArtistBeforeYear() {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
 
-        	System.out.println("Enter the artist you would like to search: ");
-        	String artist = keyboard.nextLine();
-        	strings.put(1, artist);
-        	
-        	System.out.println("Enter the year you would like to obtain tracks before: ");
-        	int year = keyboard.nextInt();
-        	keyboard.nextLine(); 
-        	integers.put(2, year);
-        	
-        	sqlPreparedQuery(conn, tracksOfArtistBeforeYear, strings, integers);
-    	} else if (selection == 3) {
-    		Map<Integer, String> strings = new HashMap<>();
-        	Map<Integer, Integer> integers = new HashMap<>();
-        	
-        	System.out.println("Enter the artist you would like to add: ");
-        	String artist = keyboard.nextLine();
-        	strings.put(1, artist);
-        	
-        	sqlPreparedInsert(conn, insertArtist, strings, integers);
-    	}
+    	System.out.println("Enter the artist you would like to search: ");
+    	String artist = in.nextLine();
+    	strings.put(1, artist);
     	
-    	/*finally{
- 		   
- 			/* From JSE7 onwards the try-with-resources statement is introduced. 
- 			 * The resources in the try block will be closed automatically after the use,
- 			 * at the end of the try block
- 			 *  close JDBC objects
- 			 * If not, use the following block:
- 		   try {
- 		      if(rs!=null) rs.close();
- 		   } catch (SQLException se) {
- 		      se.printStackTrace();
- 		   }
- 		   try {
- 		      if(stmt !=null) st.close();
- 		   } catch (SQLException se) {
- 		      se.printStackTrace();
- 		   }
- 		   try {
- 		      if(conn !=null) con.close();
- 		   } catch (SQLException se) {
- 		      se.printStackTrace();
- 		   }
- 		}*/
-    			
+    	System.out.println("Enter the year you would like to obtain tracks before: ");
+    	int year = in.nextInt();
+    	in.nextLine(); 
+    	integers.put(2, year);
+    	
+    	sqlPreparedQuery(tracksByArtistBeforeYearSQL, strings, integers);
+    	
     }
+    
+    static void albumsCheckedOutByPatron() {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	System.out.println("Enter the member id for the patron you would like to search: ");
+    	int id = in.nextInt();
+    	in.nextLine(); 
+    	integers.put(1, id);
+    	
+    	sqlPreparedQuery(albumsCheckedOutByPatronSQL, strings, integers);
+
+    }
+    
+//    public static void main(String[] args) {
+//    	Scanner keyboard = new Scanner(System.in);
+//    	System.out.println("This is a new run");
+//    	Connection conn = initializeDB(DATABASE);
+//    	    	
+//    	System.out.println("*********************************************************************");
+//    	System.out.println("Part 5 - Add another query");
+//    	System.out.println("*********************************************************************");
+//    	System.out.println("Part 6 - Add other queries - Use PreparedStatements");
+//    	
+//    	System.out.println("Choose your desired query:");
+//    	System.out.println("(1) Return all media entries.");
+//    	System.out.println("(2) Return tracks by an artist before a specific year.");
+//    	System.out.println("(3) Insert an artist into the database.");
+//    	
+//    	int selection = keyboard.nextInt();
+//    	keyboard.nextLine();
+//    	
+//    	if (selection == 1) {
+//        	sqlQuery(conn, allMedia);
+//    	} else if (selection == 2) {
+//        	Map<Integer, String> strings = new HashMap<>();
+//        	Map<Integer, Integer> integers = new HashMap<>();
+//
+//        	System.out.println("Enter the artist you would like to search: ");
+//        	String artist = keyboard.nextLine();
+//        	strings.put(1, artist);
+//        	
+//        	System.out.println("Enter the year you would like to obtain tracks before: ");
+//        	int year = keyboard.nextInt();
+//        	keyboard.nextLine(); 
+//        	integers.put(2, year);
+//        	
+//        	sqlPreparedQuery(conn, tracksOfArtistBeforeYear, strings, integers);
+//    	} else if (selection == 3) {
+//    		Map<Integer, String> strings = new HashMap<>();
+//        	Map<Integer, Integer> integers = new HashMap<>();
+//        	
+//        	System.out.println("Enter the artist you would like to add: ");
+//        	String artist = keyboard.nextLine();
+//        	strings.put(1, artist);
+//        	
+//        	sqlPreparedInsert(conn, insertArtistSQL, strings, integers);
+//    	}
+//    	
+//    	/*finally{
+// 		   
+// 			/* From JSE7 onwards the try-with-resources statement is introduced. 
+// 			 * The resources in the try block will be closed automatically after the use,
+// 			 * at the end of the try block
+// 			 *  close JDBC objects
+// 			 * If not, use the following block:
+// 		   try {
+// 		      if(rs!=null) rs.close();
+// 		   } catch (SQLException se) {
+// 		      se.printStackTrace();
+// 		   }
+// 		   try {
+// 		      if(stmt !=null) st.close();
+// 		   } catch (SQLException se) {
+// 		      se.printStackTrace();
+// 		   }
+// 		   try {
+// 		      if(conn !=null) con.close();
+// 		   } catch (SQLException se) {
+// 		      se.printStackTrace();
+// 		   }
+// 		}*/
+//    			
+//    }
+    
 }

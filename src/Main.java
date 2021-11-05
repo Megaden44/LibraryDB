@@ -12,6 +12,7 @@ public class Main {
 		boolean menu = true;
 		
 		System.out.println("Welcome to the library database.");
+		Queries.initializeDB(in);
 		
 		/*	Present interface options to user	*/
 		while(menu) {
@@ -263,11 +264,11 @@ public class Main {
 			input = in.nextLine().toLowerCase();
 			switch(input) {
 				case "a":
-					System.out.println("Not yet implemented.");
+					Queries.tracksByArtistBeforeYear();
 					choice = false;
 					break;
 				case "b":
-					System.out.println("Not yet implemented.");
+					Queries.albumsCheckedOutByPatron();
 					choice = false;
 					break;
 				case "c":

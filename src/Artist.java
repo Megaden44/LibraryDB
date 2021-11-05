@@ -3,7 +3,6 @@ import java.util.ArrayList;
 public class Artist {
 	String name;
 	ArrayList<Track> trackList = new ArrayList<Track>();
-	
 
 	/**
 	 * @param name
@@ -43,6 +42,5 @@ public class Artist {
 			System.out.println(t.getTitle() + ", " + t.getLength() + "mins");
 		}
 	}
-	
 	
 }
