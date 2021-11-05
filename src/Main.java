@@ -226,32 +226,13 @@ public class Main {
 	private static void edit() {
 		String name, newName;
 		Scanner in = new Scanner(System.in);
-		boolean invalid = true;
-		while (invalid) {
-			System.out.println("Enter an artist to edit:");		/*	Select artist to edit	*/
-			name = in.nextLine();
-			/*	Search for artist	*/
-			for (Artist a : artists) {
-				if (a.getName().equals(name)) {
-					/*	Edit attributes of artist	*/
-					System.out.println("Enter a new name for the Artist or press Enter to keep same:");
-					newName = in.nextLine();
-					if (!newName.equals("")) {
-						a.setName(newName);			/*	Change artist name	*/
-						for (Track t : tracks) {	/*	Change Track attribute for artist	*/
-							if(t.getArtist().equals(name)) {
-								t.setArtist(newName);
-							}
-						}
-					}
-					invalid = false;
-				}
-			}
-			/*	Artist not found	*/
-			if(invalid) {
-				System.out.println("Artist not found.");
-			}
-		}
+		
+		System.out.println("Enter an artist to edit:");		/*	Select artist to edit	*/
+		name = in.nextLine();
+		System.out.println("Enter the new name of the artist:"); /*	Provide new name of artist	*/
+		newName = in.nextLine();
+
+		Queries.editArtist(name, newName);
 	}
 	
 	private static void report() {
@@ -272,15 +253,15 @@ public class Main {
 					choice = false;
 					break;
 				case "c":
-					System.out.println("Not yet implemented.");
+					Queries.mostPopularActor();
 					choice = false;
 					break;
 				case "d":
-					System.out.println("Not yet implemented.");
+					Queries.mostListenedToArtist();
 					choice = false;
 					break;
 				case "e":
-					System.out.println("Not yet implemented.");
+					Queries.patronWithMostMovies();
 					choice = false;
 					break;
 				default:

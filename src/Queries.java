@@ -90,6 +90,57 @@ public class Queries {
 														+ "FROM Album AS A, Media AS M, Inventory_Media AS IM, Member_Checked_Out AS MC\r\n"
 														+ "WHERE A.Media_id = M.Media_id AND M.Media_id = IM.Media_id AND\r\n"
 														+ "IM.Instance_id = MC.Instance_id AND MC.Member_id = ?;";
+	private static String mostPopularActorSQL = "SELECT T.Actor_Name\r\n"
+			+ "FROM\r\n"
+			+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
+			+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
+			+ "MO, Movie_Stars AS MS\r\n"
+			+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+			+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n"
+			+ "GROUP BY Actor_Name) AS T\r\n"
+			+ "WHERE T.ActorCount = \r\n"
+			+ "(SELECT MAX(ActorCount)\r\n"
+			+ "FROM\r\n"
+			+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
+			+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
+			+ "MO, Movie_Stars AS MS\r\n"
+			+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+			+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n"
+			+ "GROUP BY Actor_Name));";
+	private static String mostListenedToArtistSQL = "SELECT T.Artist_Name\r\n"
+			+ "FROM\r\n"
+			+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
+			+ "COUNT(M.Media_id) AS TotalLent\r\n"
+			+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
+			+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
+			+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+			+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
+			+ "GROUP BY Artist_Name) AS T\r\n"
+			+ "WHERE (TotalDuration*TotalLent) = \r\n"
+			+ "(SELECT MAX(TotalDuration*TotalLent)\r\n"
+			+ "FROM\r\n"
+			+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
+			+ "COUNT(M.Media_id) AS TotalLent\r\n"
+			+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
+			+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
+			+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+			+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
+			+ "GROUP BY Artist_Name));";
+	private static String patronWithMostMoviesSQL = "SELECT P.Patron_FName, P.Patron_LName, MAX(C.movieCount) AS Total_Movies\r\n"
+			+ "FROM (SELECT P.Member_id AS movieLover, COUNT(M.Media_id) AS movieCount\r\n"
+			+ "FROM Movie AS MO, Media AS M, Inventory_Media AS IM,\r\n"
+			+ "Member_Checked_Out AS MC, Patron AS P\r\n"
+			+ "WHERE P.Member_id = MC.Member_id AND\r\n"
+			+ "MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND M.Media_id = MO.Media_id\r\n"
+			+ "GROUP BY P.Member_id) AS C, Patron AS P\r\n"
+			+ "WHERE C.movieLover = P.Member_id;\r\n";
+	private static String editArtist = "UPDATE Artist\r\n"
+			+ "SET Artist_Name = ?\r\n"
+			+ "WHERE Artist_Name = ?;\r\n";
+	private static String editArtistCascade = "UPDATE Artist_Created\r\n"
+			+ "SET Artist_Name = ?\r\n"
+			+ "WHERE Artist_Name = ?;";
+	private static String editArtistCheck = "SELECT * FROM Artist;";
 	
     /**
      * Connects to the database if it exists, creates it if it does not, and saves the connection object
@@ -166,6 +217,32 @@ public class Queries {
         } catch (SQLException e) {
             System.out.println(e.getMessage());
         }
+    }
+    
+    static int sqlPreparedUpdateQuery(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers) {
+    	int rs = 0;
+        try {
+        	PreparedStatement stmt = null;
+        	ResultSet resultSet = null;
+        	int size =0;
+    		stmt = conn.prepareStatement(sql);
+
+        	//add in params
+    		for (Map.Entry<Integer,String> entry : strings.entrySet()) {
+                stmt.setString(entry.getKey(),entry.getValue());
+        	}
+    		
+    		for (Map.Entry<Integer,Integer> entry : integers.entrySet()) {
+                stmt.setInt(entry.getKey(),entry.getValue());
+        	}
+        	
+        	rs = stmt.executeUpdate();
+        	
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        return rs;
     }
     
     private static void printResultSet(ResultSet rs) {
@@ -257,6 +334,36 @@ public class Queries {
     	
     	sqlPreparedQuery(albumsCheckedOutByPatronSQL, strings, integers);
 
+    }
+    
+    static void mostPopularActor() {
+    	sqlQuery(mostPopularActorSQL);
+    }
+    
+    static void mostListenedToArtist() {
+    	sqlQuery(mostListenedToArtistSQL);
+    }
+    
+    static void patronWithMostMovies() {
+    	sqlQuery(patronWithMostMoviesSQL);
+    }
+    
+    static void editArtist(String artistName, String editedName) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+		
+		strings.put(1, editedName);
+		strings.put(2, artistName);
+		
+		int success = sqlPreparedUpdateQuery(editArtist, strings, integers);
+    	if (success > 0) {
+    		System.out.println("Update complete.");
+    	} else if (success == 0) {
+    		System.out.println("Nothing to update.");
+    	}
+    	success = sqlPreparedUpdateQuery(editArtistCascade, strings, integers);
+		//sqlQuery(editArtistCheck);
+		//sqlQuery("SELECT * FROM Artist_Created;");
     }
     
 //    public static void main(String[] args) {
