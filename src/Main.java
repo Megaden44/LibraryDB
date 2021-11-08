@@ -76,7 +76,6 @@ public class Main {
 	/*	Add either a new Artist or new Track	*/
 	private static void addRecord(Scanner in) {
 		String input;
-		int id;
 		boolean choice = true, found = false;
 		/*	Get user input for what will be added	*/
 		while(choice) {
@@ -84,30 +83,11 @@ public class Main {
 			input = in.nextLine().toLowerCase();
 			switch(input) {
 			case "a":
-				String name;
 				/*	Input new artist attributes	*/
-				System.out.println("Enter Artist Name:");
-				name = in.nextLine();
-				/*	Check if artist already exists	*/
-				Queries.addArtist(name);
+				Queries.addArtist();
 				break;
 			case "b":
-				String title, artist;
-				int length;
-				/*	Input Track attributes	*/
-				System.out.println("Enter Track ID:");
-				id = in.nextInt();
-				in.nextLine();
-				System.out.println("Enter Track title:");
-				title = in.nextLine();
-				System.out.println("Enter Artist name:");
-				artist = in.nextLine();
-				System.out.println("Enter Track length:");
-				length = in.nextInt();
-				in.nextLine();
-
-				Queries.addTrack(id, title, length);
-				Queries.addArtistCreated(artist, id);
+				Queries.addTrack();
 
 				break;
 			case "q":
@@ -131,123 +111,10 @@ public class Main {
 			input = in.nextLine();
 			switch(input) {
 			case "a":
-				String title, director, star, rating, arrival, genre;
-				int id, length, year, orderId, physNumOrdered, digNumOrdered, price;
-				/*	Input Movie attributes	*/
-				System.out.println("Enter Movie ID:");
-				id = in.nextInt();
-				in.nextLine();
-				
-				System.out.println("Enter Movie Title:");
-				title = in.nextLine();
-
-				System.out.println("Enter Movie Genre:");
-				genre = in.nextLine();
-
-				System.out.println("Enter Movie Length:");
-				length = in.nextInt();
-				in.nextLine();
-				
-				System.out.println("Enter Movie Year:");
-				year = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter Movie Director:");
-				director = in.nextLine();
-
-				System.out.println("Enter Movie Star:");
-				star = in.nextLine();
-
-				System.out.println("Enter Movie Rating:");
-				rating = in.nextLine();
-
-				Queries.addMedia(id, title, genre, length, year);
-				Queries.addMovie(id, director, rating);
-				Queries.addActor(star);
-				Queries.addMovieStars(star, id);
-
-				/*	Input order attributes	*/
-				System.out.println("Enter Order ID:");
-				orderId = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter number of physical copies ordered:");
-				physNumOrdered = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter number of digital copies ordered:");
-				digNumOrdered = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter Price of order:");
-				price = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter Est. Order arrival date (yyyy-mm-dd):");
-				arrival = in.nextLine();
-
-				Queries.addOrder(id, orderId, price, physNumOrdered, digNumOrdered, arrival);
-
+				Queries.orderMovie();
 				break;
 			case "b":
-				int instId, row, section;
-				String license, exp;
-				System.out.println("Enter Media ID:");
-				id = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter Order ID:");
-				orderId = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter number of physical copies ordered:");
-				physNumOrdered = in.nextInt();
-				in.nextLine();
-
-				System.out.println("Enter number of digital copies ordered:");
-				digNumOrdered = in.nextInt();
-				in.nextLine();
-
-				for (int i = 0; i < physNumOrdered; i++) {
-					System.out.println("Enter Instance ID " + (i+1) + ":");
-					instId = in.nextInt();
-					in.nextLine();
-					
-					Queries.addInv(id, instId);
-
-					System.out.println("Enter Date of arrival (mm/dd/yyyy):");
-					arrival = in.nextLine();
-
-					System.out.println("Enter Shelf Row Location:");
-					row = in.nextInt();
-					in.nextLine();
-
-					System.out.println("Enter Shelf Section:");
-					section = in.nextInt();
-					in.nextLine();
-
-					Queries.addPhysicalMedia(instId, arrival, row, section);
-				}
-
-				for (int j = 0; j < digNumOrdered; j++) {
-					System.out.println("Enter Instance ID " + (j+1) + ":");
-					instId = in.nextInt();
-					in.nextLine();
-					
-					Queries.addInv(id, instId);
-
-					System.out.println("Enter Digital License:");
-					license = in.nextLine();
-
-					System.out.println("Enter Date of License Expiration (yyyy-mm-dd):");
-					exp = in.nextLine();
-
-					Queries.addLicense(license, exp);
-					Queries.addDigitalMedia(instId, license);
-				}
-
-				Queries.deleteOrder(orderId);
-
+				Queries.activateOrder();
 				break;
 			case "q":
 				System.out.println("Returning to previous menu...");

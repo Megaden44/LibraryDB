@@ -98,24 +98,24 @@ public class Queries {
 	 */
 	private static String getTrack = 
 			"SELECT *\r\n"
-			+ "FROM Track\r\n"
-			+ "WHERE Track_id = ?;";
-	
+					+ "FROM Track\r\n"
+					+ "WHERE Track_id = ?;";
+
 	private static String tracksByTitle = 
 			"SELECT T.Track_id, T.Track_Title, AR.Artist_Name\r\n"
-			+ "FROM Track AS T, Artist_Created AS AR\r\n"
-			+ "WHERE AR.Track_id = T.Track_id AND T.Track_Title = ?;";
-	
+					+ "FROM Track AS T, Artist_Created AS AR\r\n"
+					+ "WHERE AR.Track_id = T.Track_id AND T.Track_Title = ?;";
+
 	private static String albumsWorkedOnByArtist = 
 			"SELECT DISTINCT(M.Title)\r\n"
 					+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
 					+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
 					+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ?;";
-	
+
 	private static String tracksByArtist = 
 			"SELECT T.Track_Title\r\n"
-			+ "FROM Track AS T, Artist_Created AS AR\r\n"
-			+ "WHERE AR.Track_id = T.Track_id AND AR.Artist_Name = ?;";
+					+ "FROM Track AS T, Artist_Created AS AR\r\n"
+					+ "WHERE AR.Track_id = T.Track_id AND AR.Artist_Name = ?;";
 
 	private static String allMedia = 
 			"SELECT * FROM Media;";
@@ -163,7 +163,7 @@ public class Queries {
 			"INSERT INTO License\r\n" + "VALUES (?, ?);";
 
 	private static String deleteOrderSQL = 
-			"DELETE FROM Ordered_Media\r\n" + "WHERE Order_id = ?;";
+			"DELETE FROM Ordered_Media\r\n" + "WHERE Media_id = ? AND Order_id = ?;";
 
 	private static String albumsCheckedOutByPatronSQL = 
 			"SELECT COUNT(M.Media_id) as Albums_Checked_Out\r\n"
@@ -220,8 +220,33 @@ public class Queries {
 
 	private static String artistExistsCheck = 
 			"SELECT *\r\n"
-			+ "FROM Artist\r\n"
-			+ "WHERE Artist_Name = ?;";
+					+ "FROM Artist\r\n"
+					+ "WHERE Artist_Name = ?;";
+
+	private static String trackExistsCheck = 
+			"SELECT *\r\n"
+					+ "FROM Track\r\n"
+					+ "WHERE Track_id = ?;";
+
+	private static String movieExistsCheck =
+			"SELECT Me.Title\r\n"
+					+ "FROM Movie AS Mo, Media AS Me\r\n"
+					+ "WHERE Mo.Media_id = Me.Media_id AND Mo.Media_id = ?;";
+
+	private static String actorExistsCheck =
+			"SELECT *\r\n"
+					+ "FROM Actor\r\n"
+					+ "WHERE Actor_Name = ?;";
+
+	private static String mediaExistsCheck =
+			"SELECT *\r\n"
+					+ "FROM Media\r\n"
+					+ "WHERE Media_id = ?;";
+
+	private static String orderExistsCheck = 
+			"SELECT *\r\n"
+					+ "FROM Ordered_Media\r\n"
+					+ "WHERE Media_id = ? AND Order_id = ?;";
 
 	/**
 	 * Connects to the database if it exists, creates it if it does not, and saves
@@ -302,7 +327,7 @@ public class Queries {
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
-		
+
 		return results;
 	}
 
@@ -350,7 +375,7 @@ public class Queries {
 					System.out.print("\n");
 
 					results = true;
-					
+
 				}
 				for (int i = 1; i <= columnCount; i++) {
 					String columnValue = rs.getString(i);
@@ -366,13 +391,12 @@ public class Queries {
 			}
 
 		} catch (SQLException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return results;
 	}
 
-	static void sqlPreparedInsert(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers) {
+	static void sqlPreparedInsert(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers, Map<Integer, Float> floats) {
 		try {
 			PreparedStatement stmt = null;
 			ResultSet resultSet = null;
@@ -385,6 +409,10 @@ public class Queries {
 
 			for (Map.Entry<Integer, Integer> entry : integers.entrySet()) {
 				stmt.setInt(entry.getKey(), entry.getValue());
+			}
+
+			for (Map.Entry<Integer, Float> entry : floats.entrySet()) {
+				stmt.setFloat(entry.getKey(), entry.getValue());
 			}
 
 			int row = stmt.executeUpdate();
@@ -404,12 +432,12 @@ public class Queries {
 		System.out.println("Enter the artist you would like to search: ");
 		String artist = in.nextLine();
 		strings.put(1, artist);
-		
+
 		System.out.println("Here is the information for all albums worked on by " + artist + ":");
 		sqlPreparedQuery(albumsWorkedOnByArtist, strings, integers);
-		
+
 		System.out.println();
-		
+
 		System.out.println("Here is the information for all tracks worked on by " + artist + ":");
 		sqlPreparedQuery(tracksByArtist, strings, integers);
 
@@ -418,25 +446,25 @@ public class Queries {
 	static void getTrackInformation() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
-		
+
 		System.out.println("Enter the track you would like to search: ");
 		String trackTitle = in.nextLine();
-		
+
 		System.out.println("Here is the information for all tracks with that name: ");
 		strings.put(1, trackTitle);
 		boolean results = sqlPreparedQuery(tracksByTitle, strings, integers);
-		
+
 		if(results) {
 			strings = new HashMap<>();
 			integers = new HashMap<>();
-			
+
 			System.out.println("Enter the track_id you would like more information on: ");
 			int trackID = in.nextInt();
 			in.nextLine();
 			integers.put(1, trackID);
 			sqlPreparedQuery(getTrack, strings, integers);
 		}
-	
+
 	}
 
 	static void tracksByArtistBeforeYear() {
@@ -497,9 +525,13 @@ public class Queries {
 		success = sqlPreparedUpdateQuery(editArtistCascade, strings, integers);
 	}
 
-	static void addArtist(String name) {
+	static void addArtist() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
+
+		System.out.println("Enter Artist Name:");
+		String name = in.nextLine();
 
 		strings.put(1, name);
 		System.out.println("Checking for artist in database...");
@@ -507,130 +539,372 @@ public class Queries {
 			System.out.println("Artist already exists.");
 		} else {
 			System.out.println("Adding artist to database...");
-			sqlPreparedInsert(insertArtistSQL, strings, integers);
+			sqlPreparedInsert(insertArtistSQL, strings, integers, floats);
 		}
 	}
 
-	static void addTrack(int id, String title, int length) {
+	static void addTrack() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
+		/*	Input Track attributes	*/
+		System.out.println("Enter Track ID:");
+		int id = in.nextInt();
+		in.nextLine();
 		integers.put(1, id);
-		strings.put(2, title);
-		integers.put(3, length);
-		System.out.println("Adding track to database...");
-		sqlPreparedInsert(insertTrackSQL, strings, integers);
+
+		System.out.println("Checking for track in database...");
+		if(sqlPreparedQuery(trackExistsCheck, strings, integers)) {
+			System.out.println("Track already exists with this id.");
+
+		} else {
+			System.out.println("Enter Track title:");
+			String title = in.nextLine();
+
+			System.out.println("Enter Track length:");
+			int length = in.nextInt();
+			in.nextLine();
+
+			strings.put(2, title);
+			integers.put(3, length);
+
+			System.out.println("Adding track to database...");
+			sqlPreparedInsert(insertTrackSQL, strings, integers, floats);
+
+			Queries.addArtistCreated(id);
+		}
 	}
 
-	static void addArtistCreated(String name, int id) {
+	static void addArtistCreated(int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
+
+		System.out.println("Enter Artist name:");
+		String artist = in.nextLine();
+
+		strings.put(1, artist);
+
+		System.out.println("Checking for artist in database...");
+		if(sqlPreparedQuery(artistExistsCheck, strings, integers)) {
+			System.out.println("Artist already exists.");
+		} else {
+			System.out.println("Adding artist to database...");
+			sqlPreparedInsert(insertArtistSQL, strings, integers, floats);
+		}
 
 		integers.put(2, id);
-		strings.put(1, name);
 
 		System.out.println("Correlating track with artist in database...");
-		sqlPreparedInsert(insertArtistCreatedSQL, strings, integers);
+		sqlPreparedInsert(insertArtistCreatedSQL, strings, integers, floats);
 	}
 
-	static void addMedia(int id, String title, String genre, int length, int year) {
+	static void orderMovie() {
+		Map<Integer, String> strings = new HashMap<>();
+		Map<Integer, Integer> integers = new HashMap<>();
+		boolean order = true;
+
+		System.out.println("Enter Movie ID:");
+		int id = in.nextInt();
+		in.nextLine();
+
+		integers.put(1,id);
+
+		System.out.println("Checking for movie in database...");
+		if(sqlPreparedQuery(movieExistsCheck, strings, integers)) {
+			System.out.println("Movie already exists.");
+
+		} else {
+			System.out.println("Checking for id in media...");
+			if(sqlPreparedQuery(mediaExistsCheck, strings, integers)) {
+				System.out.println("Media already exists with this id.");
+				order = false;
+			} else {
+				Queries.addMedia(id);
+				Queries.addMovie(id);
+
+				/* Input Movie Stars */
+				boolean moreStars = true;
+				while(moreStars) {
+					System.out.println("Enter Movie Star:");
+					String star = in.nextLine();
+
+					strings.clear();
+					integers.clear();
+					strings.put(1,star);
+
+					System.out.println("Checking for actor in database...");
+					if(sqlPreparedQuery(actorExistsCheck, strings, integers)) {
+						System.out.println("Actor already exists.");
+					} else {
+						System.out.println("Adding actor to database...");
+						Queries.addActor(star);
+					}
+
+					System.out.println("Correlating actor with movie in database...");
+					Queries.addMovieStars(star, id);
+
+					boolean choice = true;
+					while(choice) {
+						System.out.println("Input \'a\' to add more stars or 'q' to continue with the order.");
+						String input = in.nextLine();
+						switch(input) {
+						case "a":
+							choice = false;
+							break;
+						case "q":
+							System.out.println("Continuing with the order...");
+							moreStars = false;
+							choice = false;
+							break;
+						default:
+							System.out.println("Invalid input.");
+						}
+					}
+				}
+			}
+		}
+
+		if(order) {
+			//add order
+			Queries.addOrder(id);
+		}
+
+	}
+
+	static void activateOrder() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
 
+		System.out.println("Enter Media ID:");
+		int id = in.nextInt();
+		in.nextLine();
+
+		System.out.println("Enter Order ID:");
+		int orderId = in.nextInt();
+		in.nextLine();
+
+		//TODO
 		integers.put(1, id);
+		integers.put(2, orderId);
+
+		System.out.println("Checking for order in database...");
+		if(sqlPreparedQuery(orderExistsCheck, strings, integers)) {
+			//get physical and digital copies
+			System.out.println("Enter number of physical copies received:");
+			int physNumOrdered = in.nextInt();
+			in.nextLine();
+
+			if (physNumOrdered > 0) {
+				System.out.println("Enter data for physical copies:");
+				for (int i = 0; i < physNumOrdered; i++) {
+					System.out.println("Enter Instance ID " + (i+1) + ":");
+					int instId = in.nextInt();
+					in.nextLine();
+
+					Queries.addInv(id, instId);
+
+					System.out.println("Enter Date of arrival (yyyy-mm-dd):");
+					String arrival = in.nextLine();
+
+					System.out.println("Enter Shelf Row Location:");
+					int row = in.nextInt();
+					in.nextLine();
+
+					System.out.println("Enter Shelf Section:");
+					int section = in.nextInt();
+					in.nextLine();
+
+					Queries.addPhysicalMedia(instId, arrival, row, section);
+				}
+			}
+
+			System.out.println("Enter number of digital copies received:");
+			int digNumOrdered = in.nextInt();
+			in.nextLine();
+
+			if (digNumOrdered > 0) {
+				System.out.println("Enter data for digital copies:");
+				for (int j = 0; j < digNumOrdered; j++) {
+					System.out.println("Enter Instance ID " + (j+1) + ":");
+					int instId = in.nextInt();
+					in.nextLine();
+
+					Queries.addInv(id, instId);
+
+					System.out.println("Enter Digital License:");
+					String license = in.nextLine();
+
+					System.out.println("Enter Date of License Expiration (yyyy-mm-dd):");
+					String exp = in.nextLine();
+
+					Queries.addLicense(license, exp);
+					Queries.addDigitalMedia(instId, license);
+				}
+			}
+
+			Queries.deleteOrder(id, orderId);
+
+		} else {
+			System.out.println("Order not found...");
+		}
+	}
+
+	static void addMedia(int id) {
+		Map<Integer, String> strings = new HashMap<>();
+		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
+
+		integers.put(1, id);
+
+		/*	Input Media attributes	*/
+		System.out.println("Enter Title:");
+		String title = in.nextLine();
+
+		System.out.println("Enter Genre:");
+		String genre = in.nextLine();
+
+		System.out.println("Enter Length:");
+		int length = in.nextInt();
+		in.nextLine();
+
+		System.out.println("Enter Year:");
+		int year = in.nextInt();
+		in.nextLine();
+
 		strings.put(2, title);
 		strings.put(3, genre);
 		integers.put(4, length);
 		integers.put(5, year);
 
-		sqlPreparedInsert(insertMediaSQL, strings, integers);
+		sqlPreparedInsert(insertMediaSQL, strings, integers, floats);
 	}
 
-	static void addMovie(int id, String director, String rating) {
+	static void addMovie(int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(1, id);
+
+		/* Input Movie attributes */
+		System.out.println("Enter Movie Director:");
+		String director = in.nextLine();
+		System.out.println("Enter Movie Rating:");
+		String rating = in.nextLine();
+
 		strings.put(2, director);
 		strings.put(3, rating);
-		sqlPreparedInsert(insertMovieSQL, strings, integers);
+
+		sqlPreparedInsert(insertMovieSQL, strings, integers, floats);
 	}
 
 	static void addActor(String name) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		strings.put(1, name);
-		sqlPreparedInsert(insertActorSQL, strings, integers);
+		sqlPreparedInsert(insertActorSQL, strings, integers, floats);
 	}
 
 	static void addMovieStars(String name, int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(2, id);
 		strings.put(1, name);
-		sqlPreparedInsert(insertMovieStarsSQL, strings, integers);
+		sqlPreparedInsert(insertMovieStarsSQL, strings, integers, floats);
 	}
 
-	static void addOrder(int mid, int oid, int price, int phys, int dig, String deliver) {
+	static void addOrder(int mid) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(1, mid);
-		integers.put(2, oid);
-		integers.put(3, price);
-		integers.put(4, phys);
-		integers.put(5, dig);
-		strings.put(6, deliver);
-		sqlPreparedInsert(insertOrderedSQL, strings, integers);
+
+		/*	Input order attributes	*/
+		System.out.println("Enter Order ID:");
+		int orderId = in.nextInt();
+		in.nextLine();
+
+		System.out.println("Enter number of physical copies ordered:");
+		int physNumOrdered = in.nextInt();
+		in.nextLine();
+
+		System.out.println("Enter number of digital copies ordered:");
+		int digNumOrdered = in.nextInt();
+		in.nextLine();
+
+		System.out.println("Enter Price of order:");
+		float price = in.nextFloat();
+		in.nextLine();
+
+		System.out.println("Enter Est. Order arrival date (yyyy-mm-dd):");
+		String arrival = in.nextLine();
+
+		integers.put(2, orderId);
+		floats.put(3, price);
+		integers.put(4, physNumOrdered);
+		integers.put(5, digNumOrdered);
+		strings.put(6, arrival);
+		sqlPreparedInsert(insertOrderedSQL, strings, integers, floats);
 	}
 
 	static void addInv(int mid, int iid) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(2, mid);
 		integers.put(1, iid);
-		sqlPreparedInsert(insertInvSQL, strings, integers);
+		sqlPreparedInsert(insertInvSQL, strings, integers, floats);
 	}
 
 	static void addPhysicalMedia(int id, String arrive, int row, int section) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(1, id);
 		strings.put(2, arrive);
 		integers.put(3, row);
 		integers.put(4, section);
-		sqlPreparedInsert(insertPhysicalSQL, strings, integers);
+		sqlPreparedInsert(insertPhysicalSQL, strings, integers, floats);
 	}
 
 	static void addDigitalMedia(int id, String license) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		integers.put(1, id);
 		strings.put(2, license);
-		sqlPreparedInsert(insertDigitalSQL, strings, integers);
+		sqlPreparedInsert(insertDigitalSQL, strings, integers, floats);
 	}
 
 	static void addLicense(String license, String exp) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
 		strings.put(1, license);
 		strings.put(2, exp);
-		sqlPreparedInsert(insertLicenseSQL, strings, integers);
+		sqlPreparedInsert(insertLicenseSQL, strings, integers, floats);
 	}
 
-	static void deleteOrder(int id) {
+	static void deleteOrder(int mid, int oid) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
+		Map<Integer, Float> floats = new HashMap<>();
 
-		integers.put(1, id);
-
-		sqlPreparedInsert(deleteOrderSQL, strings, integers);
+		integers.put(1, mid);
+		integers.put(2, oid);
+		System.out.println("Deleting order from database...");
+		sqlPreparedInsert(deleteOrderSQL, strings, integers, floats);
 	}
 
 }
