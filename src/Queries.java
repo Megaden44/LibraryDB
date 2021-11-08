@@ -86,6 +86,31 @@ public class Queries {
 														+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ? AND M.Year < ?;";
 	private static String insertArtistSQL = "INSERT INTO Artist\r\n"
 											+ "VALUES (?);";
+	private static String insertTrackSQL = "INSERT INTO Track\r\n"
+											+ "VALUES (?, ?, ?);";
+	private static String insertArtistCreatedSQL = "INSERT INTO Artist_Created\r\n"
+											+ "VALUES (?, ?);";
+	private static String insertMediaSQL = "INSERT INTO Media\r\n"
+											+ "VALUES (?, ?, ?, ?, ?);";
+	private static String insertMovieSQL = "INSERT INTO Movie\r\n"
+											+ "VALUES (?, ?, ?);";
+	private static String insertMovieStarsSQL = "INSERT INTO Movie_Stars\r\n"
+											+ "VALUES (?, ?);";
+	private static String insertActorSQL = "INSERT INTO Actor\r\n"
+											+ "VALUES (?);";
+	private static String insertOrderedSQL = "INSERT INTO Ordered_Media\r\n"
+											+ "VALUES (?, ?, ?, ?, ?, ?);";
+	private static String insertInvSQL = "INSERT INTO Inventory_Media\r\n"
+											+ "VALUES (?, ?);";
+	private static String insertPhysicalSQL = "INSERT INTO Physical_Media\r\n"
+											+ "VALUES (?, ?, ?, ?);";
+	private static String insertDigitalSQL = "INSERT INTO Digital_Media\r\n"
+											+ "VALUES (?, ?);";
+	private static String insertLicenseSQL = "INSERT INTO License\r\n"
+											+ "VALUES (?, ?);";
+	private static String deleteOrderSQL = "DELETE FROM Ordered_Media\r\n"
+											+ "WHERE Order_id = ?;";
+	
 	private static String albumsCheckedOutByPatronSQL = "SELECT COUNT(M.Media_id) as Albums_Checked_Out\r\n"
 														+ "FROM Album AS A, Media AS M, Inventory_Media AS IM, Member_Checked_Out AS MC\r\n"
 														+ "WHERE A.Media_id = M.Media_id AND M.Media_id = IM.Media_id AND\r\n"
@@ -364,6 +389,136 @@ public class Queries {
     	success = sqlPreparedUpdateQuery(editArtistCascade, strings, integers);
 		//sqlQuery(editArtistCheck);
 		//sqlQuery("SELECT * FROM Artist_Created;");
+    }
+    
+    static void addArtist(String name) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	strings.put(1, name);
+    	sqlPreparedInsert(insertArtistSQL, strings, integers);
+    }
+    
+    static void addTrack(int id, String title, int length) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+    	strings.put(2, title);
+    	integers.put(3, length);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addAtristCreated(String name, int id) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(2, id);
+    	strings.put(1, name);
+
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addMedia(int id, String title, String genre, int length, int year) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+    	strings.put(2, title);
+    	strings.put(3, genre);
+    	integers.put(4, length);
+    	integers.put(5, year);
+    	
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addMovie(int id, String director, String rating) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+    	strings.put(2, director);
+    	strings.put(3, rating);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addActor(String name) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	strings.put(1, name);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addMovieStars(String name, int id) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(2, id);
+    	strings.put(1, name);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addOrder(int mid, int oid, int price, int phys, int dig, String deliver) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, mid);
+    	integers.put(2, oid);
+    	integers.put(3, price);
+    	integers.put(4, phys);
+    	integers.put(5, dig);
+    	strings.put(6, deliver);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addInv(int mid, int iid) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, mid);
+    	integers.put(2, iid);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addPhysicalMedia(int id, String arrive, int row, int section) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+    	strings.put(2, arrive);
+    	integers.put(3, row);
+    	integers.put(4, section);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addDigitalMedia(int id, String license) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+    	strings.put(2, license);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void addLicense(String license, String exp) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	strings.put(1, license);
+    	strings.put(2, exp);
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
+    static void deleteOrder(int id) {
+    	Map<Integer, String> strings = new HashMap<>();
+    	Map<Integer, Integer> integers = new HashMap<>();
+    	
+    	integers.put(1, id);
+
+    	sqlPreparedInsert(insertTrackSQL, strings, integers);
+    }
+    
     }
     
 //    public static void main(String[] args) {

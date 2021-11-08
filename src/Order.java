@@ -1,18 +1,20 @@
 
 public class Order {
 	Movie movie;
-	int numCopies, price;
+	int numPhysCopies, numDigCopies, price;
 	String arrival;
 	
 	/**
 	 * @param movie
-	 * @param numCopies
+	 * @param numPhysCopies
+	 * @param numDigCopies
 	 * @param price
 	 * @param arrival
 	 */
-	public Order(Movie movie, int numCopies, int price, String arrival) {
+	public Order(Movie movie, int numPhysCopies, int numDigCopies, int price, String arrival) {
 		this.movie = movie;
-		this.numCopies = numCopies;
+		this.numPhysCopies = numPhysCopies;
+		this.numDigCopies = numDigCopies;
 		this.price = price;
 		this.arrival = arrival;
 	}
@@ -32,17 +34,31 @@ public class Order {
 	}
 
 	/**
-	 * @return the numCopies
+	 * @return the numPhysCopies
 	 */
-	public int getNumCopies() {
-		return numCopies;
+	public int getNumPhysCopies() {
+		return numPhysCopies;
 	}
 
 	/**
-	 * @param numCopies the numCopies to set
+	 * @param numPhysCopies the numPhysCopies to set
 	 */
-	public void setNumCopies(int numCopies) {
-		this.numCopies = numCopies;
+	public void setNumPhysCopies(int numPhysCopies) {
+		this.numPhysCopies = numPhysCopies;
+	}
+
+	/**
+	 * @return the numDigCopies
+	 */
+	public int getNumDigCopies() {
+		return numDigCopies;
+	}
+
+	/**
+	 * @param numDigCopies the numDigCopies to set
+	 */
+	public void setNumDigCopies(int numDigCopies) {
+		this.numDigCopies = numDigCopies;
 	}
 
 	/**
