@@ -96,157 +96,6 @@ public class Queries {
 	 * all programming languages and/or packages require the semicolon (e.g.,
 	 * Python's SQLite3 library))
 	 */
-	private static String getTrack = 
-			"SELECT *\r\n"
-					+ "FROM Track\r\n"
-					+ "WHERE Track_id = ?;";
-
-	private static String tracksByTitle = 
-			"SELECT T.Track_id, T.Track_Title, AR.Artist_Name\r\n"
-					+ "FROM Track AS T, Artist_Created AS AR\r\n"
-					+ "WHERE AR.Track_id = T.Track_id AND T.Track_Title = ?;";
-
-	private static String albumsWorkedOnByArtist = 
-			"SELECT DISTINCT(M.Title)\r\n"
-					+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
-					+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
-					+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ?;";
-
-	private static String tracksByArtist = 
-			"SELECT T.Track_Title\r\n"
-					+ "FROM Track AS T, Artist_Created AS AR\r\n"
-					+ "WHERE AR.Track_id = T.Track_id AND AR.Artist_Name = ?;";
-
-	private static String allMedia = 
-			"SELECT * FROM Media;";
-
-	private static String tracksByArtistBeforeYearSQL = 
-			"SELECT T.Track_Title\r\n"
-					+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
-					+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
-					+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ? AND M.Year < ?;";
-
-	private static String insertArtistSQL = 
-			"INSERT INTO Artist\r\n" + "VALUES (?);";
-
-	private static String insertTrackSQL = 
-			"INSERT INTO Track\r\n" + "VALUES (?, ?, ?);";
-
-	private static String insertArtistCreatedSQL = 
-			"INSERT INTO Artist_Created\r\n" + "VALUES (?, ?);";
-
-	private static String insertMediaSQL = 
-			"INSERT INTO Media\r\n" + "VALUES (?, ?, ?, ?, ?);";
-
-	private static String insertMovieSQL = 
-			"INSERT INTO Movie\r\n" + "VALUES (?, ?, ?);";
-
-	private static String insertMovieStarsSQL = 
-			"INSERT INTO Movie_Stars\r\n" + "VALUES (?, ?);";
-
-	private static String insertActorSQL = 
-			"INSERT INTO Actor\r\n" + "VALUES (?);";
-
-	private static String insertOrderedSQL = 
-			"INSERT INTO Ordered_Media\r\n" + "VALUES (?, ?, ?, ?, ?, ?);";
-
-	private static String insertInvSQL = 
-			"INSERT INTO Inventory_Media\r\n" + "VALUES (?, ?);";
-
-	private static String insertPhysicalSQL = 
-			"INSERT INTO Physical_Media\r\n" + "VALUES (?, ?, ?, ?);";
-
-	private static String insertDigitalSQL = 
-			"INSERT INTO Digital_Media\r\n" + "VALUES (?, ?);";
-
-	private static String insertLicenseSQL = 
-			"INSERT INTO License\r\n" + "VALUES (?, ?);";
-
-	private static String deleteOrderSQL = 
-			"DELETE FROM Ordered_Media\r\n" + "WHERE Media_id = ? AND Order_id = ?;";
-
-	private static String albumsCheckedOutByPatronSQL = 
-			"SELECT COUNT(M.Media_id) as Albums_Checked_Out\r\n"
-					+ "FROM Album AS A, Media AS M, Inventory_Media AS IM, Member_Checked_Out AS MC\r\n"
-					+ "WHERE A.Media_id = M.Media_id AND M.Media_id = IM.Media_id AND\r\n"
-					+ "IM.Instance_id = MC.Instance_id AND MC.Member_id = ?;";
-
-	private static String mostPopularActorSQL = 
-			"SELECT T.Actor_Name\r\n" + "FROM\r\n"
-					+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
-					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
-					+ "MO, Movie_Stars AS MS\r\n"
-					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
-					+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n" + "GROUP BY Actor_Name) AS T\r\n"
-					+ "WHERE T.ActorCount = \r\n" + "(SELECT MAX(ActorCount)\r\n" + "FROM\r\n"
-					+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
-					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
-					+ "MO, Movie_Stars AS MS\r\n"
-					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
-					+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n" + "GROUP BY Actor_Name));";
-
-	private static String mostListenedToArtistSQL = 
-			"SELECT T.Artist_Name\r\n" + "FROM\r\n"
-					+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
-					+ "COUNT(M.Media_id) AS TotalLent\r\n"
-					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
-					+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
-					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
-					+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
-					+ "GROUP BY Artist_Name) AS T\r\n" + "WHERE (TotalDuration*TotalLent) = \r\n"
-					+ "(SELECT MAX(TotalDuration*TotalLent)\r\n" + "FROM\r\n"
-					+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
-					+ "COUNT(M.Media_id) AS TotalLent\r\n"
-					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
-					+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
-					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
-					+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
-					+ "GROUP BY Artist_Name));";
-
-	private static String patronWithMostMoviesSQL = 
-			"SELECT P.Patron_FName, P.Patron_LName, MAX(C.movieCount) AS Total_Movies\r\n"
-					+ "FROM (SELECT P.Member_id AS movieLover, COUNT(M.Media_id) AS movieCount\r\n"
-					+ "FROM Movie AS MO, Media AS M, Inventory_Media AS IM,\r\n" + "Member_Checked_Out AS MC, Patron AS P\r\n"
-					+ "WHERE P.Member_id = MC.Member_id AND\r\n"
-					+ "MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND M.Media_id = MO.Media_id\r\n"
-					+ "GROUP BY P.Member_id) AS C, Patron AS P\r\n" + "WHERE C.movieLover = P.Member_id;\r\n";
-
-	private static String editArtist = 
-			"UPDATE Artist\r\n" + "SET Artist_Name = ?\r\n" + "WHERE Artist_Name = ?;\r\n";
-
-	private static String editArtistCascade = 
-			"UPDATE Artist_Created\r\n" + "SET Artist_Name = ?\r\n"
-					+ "WHERE Artist_Name = ?;";
-
-	private static String artistExistsCheck = 
-			"SELECT *\r\n"
-					+ "FROM Artist\r\n"
-					+ "WHERE Artist_Name = ?;";
-
-	private static String trackExistsCheck = 
-			"SELECT *\r\n"
-					+ "FROM Track\r\n"
-					+ "WHERE Track_id = ?;";
-
-	private static String movieExistsCheck =
-			"SELECT Me.Title\r\n"
-					+ "FROM Movie AS Mo, Media AS Me\r\n"
-					+ "WHERE Mo.Media_id = Me.Media_id AND Mo.Media_id = ?;";
-
-	private static String actorExistsCheck =
-			"SELECT *\r\n"
-					+ "FROM Actor\r\n"
-					+ "WHERE Actor_Name = ?;";
-
-	private static String mediaExistsCheck =
-			"SELECT *\r\n"
-					+ "FROM Media\r\n"
-					+ "WHERE Media_id = ?;";
-
-	private static String orderExistsCheck = 
-			"SELECT *\r\n"
-					+ "FROM Ordered_Media\r\n"
-					+ "WHERE Media_id = ? AND Order_id = ?;";
 
 	/**
 	 * Connects to the database if it exists, creates it if it does not, and saves
@@ -273,7 +122,6 @@ public class Queries {
 				DatabaseMetaData meta = conn.getMetaData();
 				System.out.println("The driver name is " + meta.getDriverName());
 				System.out.println("The connection to the database was successful.");
-				System.out.println();
 			} else {
 				// Provides some feedback in case the connection failed but did not throw an
 				// exception.
@@ -425,6 +273,31 @@ public class Queries {
 		}
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String albumsWorkedOnByArtist = 
+			"SELECT DISTINCT(M.Title)\r\n"
+					+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
+					+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
+					+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ?;";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String tracksByArtist = 
+			"SELECT T.Track_Title\r\n"
+					+ "FROM Track AS T, Artist_Created AS AR\r\n"
+					+ "WHERE AR.Track_id = T.Track_id AND AR.Artist_Name = ?;";
+
 	static void getArtistInformation() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -442,6 +315,30 @@ public class Queries {
 		sqlPreparedQuery(tracksByArtist, strings, integers);
 
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String getTrack = 
+			"SELECT *\r\n"
+					+ "FROM Track\r\n"
+					+ "WHERE Track_id = ?;";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String tracksByTitle = 
+			"SELECT T.Track_id, T.Track_Title, AR.Artist_Name\r\n"
+					+ "FROM Track AS T, Artist_Created AS AR\r\n"
+					+ "WHERE AR.Track_id = T.Track_id AND T.Track_Title = ?;";
 
 	static void getTrackInformation() {
 		Map<Integer, String> strings = new HashMap<>();
@@ -467,6 +364,19 @@ public class Queries {
 
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String tracksByArtistBeforeYearSQL = 
+			"SELECT T.Track_Title\r\n"
+					+ "FROM Track AS T, Media AS M, Album AS A, Album_Contains AS AC, Artist_Created AS AR\r\n"
+					+ "WHERE M.Media_id = A.Media_id AND A.Media_id = AC.Album_Media_id AND AC.Track_id = T.Track_id\r\n"
+					+ "AND AC.Track_id = AR.Track_id AND AR.Artist_Name = ? AND M.Year < ?;";
+
 	static void tracksByArtistBeforeYear() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -484,6 +394,19 @@ public class Queries {
 
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String albumsCheckedOutByPatronSQL = 
+			"SELECT COUNT(M.Media_id) as Albums_Checked_Out\r\n"
+					+ "FROM Album AS A, Media AS M, Inventory_Media AS IM, Member_Checked_Out AS MC\r\n"
+					+ "WHERE A.Media_id = M.Media_id AND M.Media_id = IM.Media_id AND\r\n"
+					+ "IM.Instance_id = MC.Instance_id AND MC.Member_id = ?;";
+
 	static void albumsCheckedOutByPatron() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -497,17 +420,99 @@ public class Queries {
 
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String mostPopularActorSQL = 
+			"SELECT T.Actor_Name\r\n" + "FROM\r\n"
+					+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
+					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
+					+ "MO, Movie_Stars AS MS\r\n"
+					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+					+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n" + "GROUP BY Actor_Name) AS T\r\n"
+					+ "WHERE T.ActorCount = \r\n" + "(SELECT MAX(ActorCount)\r\n" + "FROM\r\n"
+					+ "(SELECT MS.Actor_Name, COUNT(MS.Movie_Media_id) AS ActorCount\r\n"
+					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Movie AS \r\n"
+					+ "MO, Movie_Stars AS MS\r\n"
+					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+					+ "M.Media_id = MO.Media_id AND MO.Media_id = MS.Movie_Media_id \r\n" + "GROUP BY Actor_Name));";
+
 	static void mostPopularActor() {
 		sqlQuery(mostPopularActorSQL);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String mostListenedToArtistSQL = 
+			"SELECT T.Artist_Name\r\n" + "FROM\r\n"
+					+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
+					+ "COUNT(M.Media_id) AS TotalLent\r\n"
+					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
+					+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
+					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+					+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
+					+ "GROUP BY Artist_Name) AS T\r\n" + "WHERE (TotalDuration*TotalLent) = \r\n"
+					+ "(SELECT MAX(TotalDuration*TotalLent)\r\n" + "FROM\r\n"
+					+ "(SELECT AC.Artist_Name, SUM(TR.Track_Length) AS TotalDuration, \r\n"
+					+ "COUNT(M.Media_id) AS TotalLent\r\n"
+					+ "FROM Member_Checked_Out AS MC, Media AS M, Inventory_Media AS IM, Album AS \r\n"
+					+ "A, Album_Contains AS AL, Artist_Created AS AC, Track AS TR\r\n"
+					+ "WHERE MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND \r\n"
+					+ "M.Media_id = A.Media_id AND A.Media_id = AL.Album_Media_id AND AL.Track_id = AC.Track_id AND AL.Track_id = TR.Track_id\r\n"
+					+ "GROUP BY Artist_Name));";
 
 	static void mostListenedToArtist() {
 		sqlQuery(mostListenedToArtistSQL);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String patronWithMostMoviesSQL = 
+			"SELECT P.Patron_FName, P.Patron_LName, MAX(C.movieCount) AS Total_Movies\r\n"
+					+ "FROM (SELECT P.Member_id AS movieLover, COUNT(M.Media_id) AS movieCount\r\n"
+					+ "FROM Movie AS MO, Media AS M, Inventory_Media AS IM,\r\n" + "Member_Checked_Out AS MC, Patron AS P\r\n"
+					+ "WHERE P.Member_id = MC.Member_id AND\r\n"
+					+ "MC.Instance_id = IM.Instance_id AND IM.Media_id = M.Media_id AND M.Media_id = MO.Media_id\r\n"
+					+ "GROUP BY P.Member_id) AS C, Patron AS P\r\n" + "WHERE C.movieLover = P.Member_id;\r\n";
+
 	static void patronWithMostMovies() {
 		sqlQuery(patronWithMostMoviesSQL);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String editArtist = 
+			"UPDATE Artist\r\n" + "SET Artist_Name = ?\r\n" + "WHERE Artist_Name = ?;\r\n";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String editArtistCascade = 
+			"UPDATE Artist_Created\r\n" + "SET Artist_Name = ?\r\n"
+					+ "WHERE Artist_Name = ?;";
 
 	static void editArtist(String artistName, String editedName) {
 		Map<Integer, String> strings = new HashMap<>();
@@ -524,6 +529,28 @@ public class Queries {
 		}
 		success = sqlPreparedUpdateQuery(editArtistCascade, strings, integers);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertArtistSQL = 
+			"INSERT INTO Artist\r\n" + "VALUES (?);";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String artistExistsCheck = 
+			"SELECT *\r\n"
+					+ "FROM Artist\r\n"
+					+ "WHERE Artist_Name = ?;";
 
 	static void addArtist() {
 		Map<Integer, String> strings = new HashMap<>();
@@ -542,6 +569,28 @@ public class Queries {
 			sqlPreparedInsert(insertArtistSQL, strings, integers, floats);
 		}
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertTrackSQL = 
+			"INSERT INTO Track\r\n" + "VALUES (?, ?, ?);";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String trackExistsCheck = 
+			"SELECT *\r\n"
+					+ "FROM Track\r\n"
+					+ "WHERE Track_id = ?;";
 
 	static void addTrack() {
 		Map<Integer, String> strings = new HashMap<>();
@@ -576,6 +625,16 @@ public class Queries {
 		}
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertArtistCreatedSQL = 
+			"INSERT INTO Artist_Created\r\n" + "VALUES (?, ?);";
+
 	static void addArtistCreated(int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -599,6 +658,42 @@ public class Queries {
 		System.out.println("Correlating track with artist in database...");
 		sqlPreparedInsert(insertArtistCreatedSQL, strings, integers, floats);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String movieExistsCheck =
+			"SELECT Me.Title\r\n"
+					+ "FROM Movie AS Mo, Media AS Me\r\n"
+					+ "WHERE Mo.Media_id = Me.Media_id AND Mo.Media_id = ?;";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String actorExistsCheck =
+			"SELECT *\r\n"
+					+ "FROM Actor\r\n"
+					+ "WHERE Actor_Name = ?;";
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String mediaExistsCheck =
+			"SELECT *\r\n"
+					+ "FROM Media\r\n"
+					+ "WHERE Media_id = ?;";
 
 	static void orderMovie() {
 		Map<Integer, String> strings = new HashMap<>();
@@ -673,6 +768,18 @@ public class Queries {
 
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String orderExistsCheck = 
+			"SELECT *\r\n"
+					+ "FROM Ordered_Media\r\n"
+					+ "WHERE Media_id = ? AND Order_id = ?;";
+
 	static void activateOrder() {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -685,7 +792,6 @@ public class Queries {
 		int orderId = in.nextInt();
 		in.nextLine();
 
-		//TODO
 		integers.put(1, id);
 		integers.put(2, orderId);
 
@@ -751,6 +857,16 @@ public class Queries {
 		}
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertMediaSQL = 
+			"INSERT INTO Media\r\n" + "VALUES (?, ?, ?, ?, ?);";
+
 	static void addMedia(int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -781,6 +897,16 @@ public class Queries {
 		sqlPreparedInsert(insertMediaSQL, strings, integers, floats);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertMovieSQL = 
+			"INSERT INTO Movie\r\n" + "VALUES (?, ?, ?);";
+
 	static void addMovie(int id) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -800,6 +926,16 @@ public class Queries {
 		sqlPreparedInsert(insertMovieSQL, strings, integers, floats);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertActorSQL = 
+			"INSERT INTO Actor\r\n" + "VALUES (?);";
+
 	static void addActor(String name) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -808,6 +944,16 @@ public class Queries {
 		strings.put(1, name);
 		sqlPreparedInsert(insertActorSQL, strings, integers, floats);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertMovieStarsSQL = 
+			"INSERT INTO Movie_Stars\r\n" + "VALUES (?, ?);";
 
 	static void addMovieStars(String name, int id) {
 		Map<Integer, String> strings = new HashMap<>();
@@ -818,6 +964,16 @@ public class Queries {
 		strings.put(1, name);
 		sqlPreparedInsert(insertMovieStarsSQL, strings, integers, floats);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertOrderedSQL = 
+			"INSERT INTO Ordered_Media\r\n" + "VALUES (?, ?, ?, ?, ?, ?);";
 
 	static void addOrder(int mid) {
 		Map<Integer, String> strings = new HashMap<>();
@@ -854,6 +1010,16 @@ public class Queries {
 		sqlPreparedInsert(insertOrderedSQL, strings, integers, floats);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertInvSQL = 
+			"INSERT INTO Inventory_Media\r\n" + "VALUES (?, ?);";
+
 	static void addInv(int mid, int iid) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -863,6 +1029,16 @@ public class Queries {
 		integers.put(1, iid);
 		sqlPreparedInsert(insertInvSQL, strings, integers, floats);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertPhysicalSQL = 
+			"INSERT INTO Physical_Media\r\n" + "VALUES (?, ?, ?, ?);";
 
 	static void addPhysicalMedia(int id, String arrive, int row, int section) {
 		Map<Integer, String> strings = new HashMap<>();
@@ -876,6 +1052,16 @@ public class Queries {
 		sqlPreparedInsert(insertPhysicalSQL, strings, integers, floats);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertDigitalSQL = 
+			"INSERT INTO Digital_Media\r\n" + "VALUES (?, ?);";
+
 	static void addDigitalMedia(int id, String license) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -886,6 +1072,16 @@ public class Queries {
 		sqlPreparedInsert(insertDigitalSQL, strings, integers, floats);
 	}
 
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String insertLicenseSQL = 
+			"INSERT INTO License\r\n" + "VALUES (?, ?);";
+
 	static void addLicense(String license, String exp) {
 		Map<Integer, String> strings = new HashMap<>();
 		Map<Integer, Integer> integers = new HashMap<>();
@@ -895,6 +1091,16 @@ public class Queries {
 		strings.put(2, exp);
 		sqlPreparedInsert(insertLicenseSQL, strings, integers, floats);
 	}
+
+	/**
+	 * The query statement to be executed.
+	 * 
+	 * Remember to include the semicolon at the end of the statement string. (Not
+	 * all programming languages and/or packages require the semicolon (e.g.,
+	 * Python's SQLite3 library))
+	 */
+	private static String deleteOrderSQL = 
+			"DELETE FROM Ordered_Media\r\n" + "WHERE Media_id = ? AND Order_id = ?;";
 
 	static void deleteOrder(int mid, int oid) {
 		Map<Integer, String> strings = new HashMap<>();
