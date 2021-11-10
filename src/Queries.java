@@ -156,8 +156,6 @@ public class Queries {
 		boolean results = false;
 		try {
 			PreparedStatement stmt = null;
-			ResultSet resultSet = null;
-			int size = 0;
 			stmt = conn.prepareStatement(sql);
 
 			// add in params
@@ -183,8 +181,6 @@ public class Queries {
 		int rs = 0;
 		try {
 			PreparedStatement stmt = null;
-			ResultSet resultSet = null;
-			int size = 0;
 			stmt = conn.prepareStatement(sql);
 
 			// add in params
@@ -247,7 +243,6 @@ public class Queries {
 	static void sqlPreparedInsert(String sql, Map<Integer, String> strings, Map<Integer, Integer> integers, Map<Integer, Float> floats) {
 		try {
 			PreparedStatement stmt = null;
-			ResultSet resultSet = null;
 			stmt = conn.prepareStatement(sql);
 
 			// add in params

@@ -1,5 +1,4 @@
 import java.util.Scanner;
-import java.util.ArrayList;
 
 public class Main {
 
@@ -53,7 +52,6 @@ public class Main {
 		System.out.println("Welcome to database search!");
 		String input;
 		boolean choice = true;
-		String name;
 		/*	Get user input for Artist or Track search	*/
 		while(choice) {
 			printSeparator(in);
@@ -81,7 +79,7 @@ public class Main {
 	private static void addRecord(Scanner in) {
 		System.out.println("Welcome to database add new record!");
 		String input;
-		boolean choice = true, found = false;
+		boolean choice = true;
 		/*	Get user input for what will be added	*/
 		while(choice) {
 			printSeparator(in);
@@ -111,7 +109,7 @@ public class Main {
 	private static void order(Scanner in) {
 		System.out.println("Welcome to database order items!");
 		String input;
-		boolean choice = true, found = false;
+		boolean choice = true;
 		/*	Get user option input	*/
 		while(choice) {
 			printSeparator(in);
